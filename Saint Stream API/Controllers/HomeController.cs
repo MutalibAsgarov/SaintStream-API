@@ -1,8 +1,10 @@
 ﻿
 using Microsoft.AspNetCore.Mvc;
 using Saint_Stream_API.DTOs;
+using Saint_Stream_API.DTOs.Auth;
 using Saint_Stream_API.Models;
 using Saint_Stream_API.Services;
+
 
 namespace Saint_Stream_API.Controllers;
 
@@ -111,5 +113,55 @@ public class HomeController : ControllerBase
             Message = "Section retrieved successfully",
             Data = result
         });
+    }
+    [Route("api/auth")]
+    [ApiController]
+    public class AuthController : ControllerBase
+    {
+        private readonly IAuthService _authService;
+
+        public AuthController(IAuthService authService)
+        {
+            _authService = authService;
+        }
+
+        [HttpPost("register")]
+        public async Task<IActionResult> Register(RegisterDto registerDto)
+        {
+            try
+            {
+                await _authService.RegisterAsync(registerDto);
+
+                return Ok(new
+                {
+                    message = "User registered successfully."
+                });
+            }
+            catch (InvalidOperationException ex)
+            {
+                return Conflict(new
+                {
+                    message = ex.Message
+                });
+            }
+        }
+
+        [HttpPost("login")]
+        public async Task<IActionResult> Login(LoginDto loginDto)
+        {
+            try
+            {
+                var response = await _authService.LoginAsync(loginDto);
+
+                return Ok(response);
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                return Unauthorized(new
+                {
+                    message = ex.Message
+                });
+            }
+        }
     }
 }

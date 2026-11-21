@@ -17,6 +17,10 @@ public class AppDbContext : DbContext
     public DbSet<Collection> Collections { get; set; }
     public DbSet<CollectionItem> CollectionItems { get; set; }
     public DbSet<Platform> Platforms { get; set; }
+    public DbSet<WatchlistItem> WatchlistItems { get; set; }
+    public DbSet<User> Users { get; set; }
+    public DbSet<RefreshToken> RefreshTokens { get; set; }
+    public DbSet<PasswordResetToken> PasswordResetTokens { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -89,6 +93,147 @@ public class AppDbContext : DbContext
             entity.Property(e => e.LogoUrl).HasColumnName("logo_url");
             entity.Property(e => e.OrderNumber).HasColumnName("order_number");
             entity.Property(e => e.IsActive).HasColumnName("is_active");
+        });
+        modelBuilder.Entity<User>(entity =>
+        {
+            entity.ToTable("users");
+
+            entity.HasKey(e => e.Id);
+
+            entity.Property(e => e.Id)
+                .HasColumnName("id");
+
+            entity.Property(e => e.Username)
+                .HasColumnName("username")
+                .HasMaxLength(20)
+                .IsRequired();
+
+            entity.HasIndex(e => e.Username)
+                .IsUnique();
+
+            entity.Property(e => e.Email)
+                .HasColumnName("email")
+                .HasMaxLength(255)
+                .IsRequired();
+
+            entity.HasIndex(e => e.Email)
+                .IsUnique();
+
+            entity.Property(e => e.PasswordHash)
+                .HasColumnName("password_hash")
+                .HasMaxLength(255)
+                .IsRequired();
+
+            entity.Property(e => e.IsActive)
+                .HasColumnName("is_active")
+                .HasDefaultValue(true);
+
+            entity.Property(e => e.CreatedAt)
+                .HasColumnName("created_at")
+                .IsRequired();
+
+            entity.Property(e => e.UpdatedAt)
+                .HasColumnName("updated_at")
+                .IsRequired();
+        });
+        modelBuilder.Entity<WatchlistItem>(entity =>
+        {
+            entity.ToTable("watchlist_items");
+
+            entity.HasKey(e => e.Id);
+
+            entity.Property(e => e.Id)
+                .HasColumnName("id");
+
+            entity.Property(e => e.UserId)
+                .HasColumnName("user_id");
+
+            entity.Property(e => e.ContentId)
+                .HasColumnName("content_id");
+
+            entity.HasIndex(e => new { e.UserId, e.ContentId })
+                .IsUnique();
+
+            entity.Property(e => e.AddedAt)
+                .HasColumnName("added_at");
+
+            entity.HasOne(e => e.User)
+                .WithMany()
+                .HasForeignKey(e => e.UserId);
+
+            entity.HasOne(e => e.Content)
+                .WithMany()
+                .HasForeignKey(e => e.ContentId);
+        });
+        modelBuilder.Entity<RefreshToken>(entity =>
+        {
+            entity.ToTable("refresh_tokens");
+
+            entity.HasKey(e => e.Id);
+
+            entity.Property(e => e.Id)
+                .HasColumnName("id");
+
+            entity.Property(e => e.UserId)
+                .HasColumnName("user_id");
+
+            entity.Property(e => e.Token)
+                .HasColumnName("token")
+                .HasMaxLength(500)
+                .IsRequired();
+
+            entity.HasIndex(e => e.Token)
+                .IsUnique();
+
+            entity.Property(e => e.ExpiresAt)
+                .HasColumnName("expires_at")
+                .IsRequired();
+
+            entity.Property(e => e.CreatedAt)
+                .HasColumnName("created_at")
+                .IsRequired();
+
+            entity.HasOne(e => e.User)
+                .WithMany()
+                .HasForeignKey(e => e.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+        modelBuilder.Entity<PasswordResetToken>(entity =>
+        {
+            entity.ToTable("password_reset_tokens");
+
+            entity.HasKey(e => e.Id);
+
+            entity.Property(e => e.Id)
+                .HasColumnName("id");
+
+            entity.Property(e => e.UserId)
+                .HasColumnName("user_id");
+
+            entity.Property(e => e.Token)
+                .HasColumnName("token")
+                .HasMaxLength(255)
+                .IsRequired();
+
+            entity.HasIndex(e => e.Token)
+                .IsUnique();
+
+            entity.Property(e => e.ExpiresAt)
+                .HasColumnName("expires_at")
+                .IsRequired();
+
+            entity.Property(e => e.IsUsed)
+                .HasColumnName("is_used")
+                .HasDefaultValue(false);
+
+            entity.Property(e => e.CreatedAt)
+                .HasColumnName("created_at")
+                .IsRequired();
+
+            entity.HasOne(e => e.User)
+                .WithMany()
+                .HasForeignKey(e => e.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
         });
     }
 }
